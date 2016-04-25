@@ -351,9 +351,7 @@ void drawMesh(SceneObject sceneObj)
     // Scale object, then apply rotations X, Y, Z, then translate
 
     mat4 rotations = RotateX(sceneObj.angles[0]) * RotateY(sceneObj.angles[1]) * RotateZ(sceneObj.angles[2]);
-    mat4 model = Translate(sceneObj.loc) *
-        RotateX(sceneObj.angles[0]) * RotateZ(sceneObj.angles[2]) * RotateY(sceneObj.angles[1]) * 
-        Scale(sceneObj.scale);
+    mat4 model = Translate(sceneObj.loc) * rotations * Scale(sceneObj.scale);
 
 
     // Set the model-view matrix for the shaders
