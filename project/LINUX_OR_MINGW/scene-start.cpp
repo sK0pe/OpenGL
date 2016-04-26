@@ -26,7 +26,10 @@ GLuint shaderProgram; // The number identifying the GLSL shader program
 GLuint vPosition, vNormal, vTexCoord; // IDs for vshader input vars (from glGetAttribLocation)
 GLuint projectionU, modelViewU; // IDs for uniform variables (from glGetUniformLocation)
 
-static float viewDist = 1.5; // Distance from the camera to the centre of the scene
+// ----Part D----
+// Scale viewDist by 10 (10*original) (-Z, camera position will be further back)
+static float viewDist = 15; // Distance from the camera to the centre of the scene
+
 static float camRotSidewaysDeg=0; // rotates the camera sideways around the centre
 static float camRotUpAndOverDeg=20; // rotates the camera up and over the centre.
 
@@ -233,9 +236,11 @@ static void adjustScaleY(vec2 sy)
 //------around the centre of the scene.---------------------------------------
 //----------------------------------------------------------------------------
 
-static void doRotate()
-{
-    setToolCallbacks(adjustCamrotsideViewdist, mat2(400,0,0,-2),
+static void doRotate(){
+    //  ----Part D----
+    //  Scale the value of the 4th float by 10, move the camera back along Z
+    //  by -20 rather than -2
+    setToolCallbacks(adjustCamrotsideViewdist, mat2(400,0,0,-20),
                      adjustcamSideUp, mat2(400, 0, 0,-90) );
 }
                                      
@@ -650,11 +655,43 @@ void reshape( int width, int height )
     //         that the same part of the scene is visible across the width of
     //         the window.
 
-    GLfloat nearDist = 0.2;
-    projection = Frustum(-nearDist*(float)width/(float)height,
-                         nearDist*(float)width/(float)height,
-                         -nearDist, nearDist,
-                         nearDist, 100.0);
+    //  ----Part D----
+    //  Scale the nearDist float by a factor of 0.1, trim less primitives
+    //  combined with increasing the viewDist, more will be seen and less
+    //  is clipped too early
+    GLfloat nearDist = 0.02;
+
+    //  ----Part E----
+    //  Determine the parameters to form the Frustum without warping image
+    //  on resize when width is lower than height or height is lower than
+    //  width
+    GLfloat leftBound, rightBound, topBound, bottomBound;
+
+    if(width < height){
+        //  If width is less than height, divide height by width
+        //  to get a constant scale based on the lower value (width)
+        leftBound = -nearDist;
+        rightBound = nearDist;
+        bottomBound = -nearDist * (float) height / (float) width;
+        topBound = nearDist * (float) height / (float) width;
+    }
+    else{
+        //  Reverse of the above situation, the lower value is now
+        //  height
+        leftBound = -nearDist * (float) width / (float) height;
+        rightBound = nearDist * (float) width / (float) height;
+        bottomBound = -nearDist;
+        topBound = nearDist;
+    }
+    //  Frustum(left, right, bottom, top, near, far)
+    //  near is kept as original as nearDist change affects everything else
+    //  far is factoed up by 10
+    projection = Frustum(leftBound,
+                            rightBound, 
+                                bottomBound,
+                                    topBound,
+                                        0.2,
+                                         1000.0); // scaled by 10 for Part D
 }
 
 //----------------------------------------------------------------------------
