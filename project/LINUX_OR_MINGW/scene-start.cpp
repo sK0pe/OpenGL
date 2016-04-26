@@ -452,6 +452,27 @@ static void adjustBlueBrightness(vec2 bl_br)
     sceneObjs[toolObj].brightness+=bl_br[1];
 }
 
+//  ----Part C----
+//  Adjusts the ambience which is the first element of 
+//  ambienceDiffusion and the diffusion which is the second
+//  element
+//  Adds these values, to the scene object.
+static void adjustAmbienceDiffusion(vec2 ambienceDiffusion){
+    sceneObjs[toolObj].ambient += ambienceDiffusion[0];
+    sceneObjs[toolObj].diffuse += ambienceDiffusion[1];
+}
+
+//  ----Part C----
+//  Adjusts the specularity which is the first element of 
+//  specularityShininess and the shininess which is the second
+//  element
+//  Adds these values, to the scene object.
+static void adjustSpecularityShininess(vec2 specularityShininess){
+    sceneObjs[toolObj].specular += specularityShininess[0];
+    sceneObjs[toolObj].shine += specularityShininess[1];
+}
+
+
 static void lightMenu(int id)
 {
     deactivateTool();
@@ -494,16 +515,42 @@ static int createArrayMenu(int size, const char menuEntries[][128], void(*menuFn
     return menuId;
 }
 
+
 static void materialMenu(int id)
 {
     deactivateTool();
     if (currObject < 0) return;
+    /*else toolObj = currObject;
+
+    switch(id){
+        case 10:
+            setToolCallbacks(adjustRedGreen, mat2(1, 0, 0, 1),
+                         adjustBlueBrightness, mat2(1, 0, 0, 1) );
+            break;
+        case 20:
+            setToolCallbacks(adjustAmbienceDiffusion, mat2(1, 0, 0, 1), 
+                        adjustSpecularityShininess, mat2(1, 0, 0, 1));
+            break;
+        default:
+            printf("Error in materialMenu\n");
+            break;
+    }*/
+
+
     if (id==10) {
         toolObj = currObject;
         setToolCallbacks(adjustRedGreen, mat2(1, 0, 0, 1),
                          adjustBlueBrightness, mat2(1, 0, 0, 1) );
     }
-    // You'll need to fill in the remaining menu items here.                                                
+    //  You'll need to fill in the remaining menu items here.
+    //  ----Part C----
+    //  Menu addition and call to adjust ambience, diffusion, specularity
+    //  and shininess of object
+    if(id == 20){
+        toolObj = currObject;
+        setToolCallbacks(adjustAmbienceDiffusion, mat2(1, 0, 0, 1),
+                            adjustSpecularityShininess, mat2(1, 0, 0, 1));
+    }                                                
     else {
         printf("Error in materialMenu\n");
     }
@@ -544,7 +591,7 @@ static void makeMenu()
 
     int materialMenuId = glutCreateMenu(materialMenu);
     glutAddMenuEntry("R/G/B/All",10);
-    glutAddMenuEntry("UNIMPLEMENTED: Ambient/Diffuse/Specular/Shine",20);
+    glutAddMenuEntry("Ambient/Diffuse/Specular/Shine",20);
 
     int texMenuId = createArrayMenu(numTextures, textureMenuEntries, texMenu);
     int groundMenuId = createArrayMenu(numTextures, textureMenuEntries, groundMenu);
