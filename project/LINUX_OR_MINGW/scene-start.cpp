@@ -239,7 +239,8 @@ static void adjustScaleY(vec2 sy)
 static void doRotate(){
     //  ----Part D----
     //  Scale the value of the 4th float by 10, move the camera back along Z
-    //  by -20 rather than -2
+    //  by -20 rather than -2, as Z movement speed needs to be scaled with
+    //  changes in Fustrum due to change in nearDist value
     setToolCallbacks(adjustCamrotsideViewdist, mat2(400,0,0,-20),
                      adjustcamSideUp, mat2(400, 0, 0,-90) );
 }
@@ -297,7 +298,8 @@ void init( void )
 
     // Initialize the vertex position attribute from the vertex shader        
     vPosition = glGetAttribLocation( shaderProgram, "vPosition" );
-    vNormal = glGetAttribLocation( shaderProgram, "vNormal" ); CheckError();
+    vNormal = glGetAttribLocation( shaderProgram, "vNormal" ); 
+    CheckError();
 
     // Likewise, initialize the vertex texture coordinates attribute.    
     vTexCoord = glGetAttribLocation( shaderProgram, "vTexCoord" );
@@ -375,8 +377,7 @@ void drawMesh(SceneObject sceneObj)
 
 //----------------------------------------------------------------------------
 
-void display( void )
-{
+void display( void ){
     numDisplayCalls++;
 
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
@@ -392,8 +393,13 @@ void display( void )
     SceneObject lightObj1 = sceneObjs[1];
     vec4 lightPosition = view * lightObj1.loc ;
 
-    glUniform4fv( glGetUniformLocation(shaderProgram, "LightPosition"),
-                  1, lightPosition);
+    glUniform4fv( glGetUniformLocation(shaderProgram, "LightPosition"), 1, lightPosition);
+    CheckError();
+    //  3 float vector for rgb
+    glUniform3fv( glGetUniformLocation(shaderProgram, "lightColour"), 1, lightObj1.rgb);
+    CheckError();
+    //  1 float vector for brightness
+    glUniform1f( glGetUniformLocation(shaderProgram, "lightBrightness"), lightObj1.brightness);
     CheckError();
 
     for (int i=0; i < nObjects; i++) {
