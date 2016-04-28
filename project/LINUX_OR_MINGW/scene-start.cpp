@@ -531,7 +531,7 @@ static void materialMenu(int id)
 {
     deactivateTool();
     if (currObject < 0) return;
-    /*else toolObj = currObject;
+    else toolObj = currObject;
 
     switch(id){
         case 10:
@@ -545,9 +545,9 @@ static void materialMenu(int id)
         default:
             printf("Error in materialMenu\n");
             break;
-    }*/
+    }
 
-
+/*
     if (id==10) {
         toolObj = currObject;
         setToolCallbacks(adjustRedGreen, mat2(1, 0, 0, 1),
@@ -564,7 +564,7 @@ static void materialMenu(int id)
     }                                                
     else {
         printf("Error in materialMenu\n");
-    }
+    }*/
 }
 
 static void adjustAngleYX(vec2 angle_yx)
