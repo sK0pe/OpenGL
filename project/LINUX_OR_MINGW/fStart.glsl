@@ -45,11 +45,12 @@ void main(){
 
     // ----Part F----
     // Distance for dropoff of light defined
-    //float lightDistance = sqrt(dot(vectorToLight, vectorToLight))/15 + 1;
-    float lightDistance = 0.01 + length(vectorToLight);
+    float lightDistance = sqrt(dot(vectorToLight, vectorToLight))/15 + 1;
+    //float lightDistance = 0.01 + length(vectorToLight);
 
     // ----Part H----
     // Only ambience, global and diffusion are passed to rgb component
+    // colour.a = 1.0 (full opacity)
     vec4 colour = vec4(globalAmbient + ((ambient + diffuse)/lightDistance), 1.0);
     // Specular component always shines white, separate from colour
     // Specular transfers information on degree of shininess
