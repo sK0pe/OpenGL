@@ -7,7 +7,7 @@ in vec2 vTexCoord;
 
 //  Variables going to fragment shader
 out vec2 texCoord;
-out vec3 cameraNormal;  //  from camera to vertex
+out vec3 cameraPosition;  //  from camera to vertex
 out vec3 vectorToCamera;   //  from vertex to camera
 out vec3 vectorToLight; //  from vertex to light
 
@@ -25,7 +25,7 @@ void main(){
     vectorToCamera = -pos;
     // Transform vertex normal into camera coordinates
     // Assume scaling is unifrom across dimensions
-    cameraNormal = (ModelView * vec4(vNormal, 0.0)).xyz;
+    cameraPosition = (ModelView * vec4(vNormal, 0.0)).xyz;
     
     gl_Position = Projection * ModelView * vPosition;
     texCoord = vTexCoord;

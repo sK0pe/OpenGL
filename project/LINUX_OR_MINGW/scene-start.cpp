@@ -395,10 +395,10 @@ void display( void ){
 
     glUniform4fv( glGetUniformLocation(shaderProgram, "LightPosition"), 1, lightPosition);
     CheckError();
-    //  3 float vector for rgb
+    //  3 float vector for rgb colour information
     glUniform3fv( glGetUniformLocation(shaderProgram, "lightColour"), 1, lightObj1.rgb);
     CheckError();
-    //  1 float vector for brightness
+    //  Single float for brightness
     glUniform1f( glGetUniformLocation(shaderProgram, "lightBrightness"), lightObj1.brightness);
     CheckError();
 
