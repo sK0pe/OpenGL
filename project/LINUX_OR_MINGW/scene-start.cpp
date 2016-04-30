@@ -112,7 +112,7 @@ void loadMeshIfNotAlreadyLoaded(int meshNumber)
 {
     if (meshNumber>=numMeshes || meshNumber < 0) {
         printf("Error - no such model number");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     if (meshes[meshNumber] != NULL)
@@ -321,6 +321,15 @@ void init( void )
     sceneObjs[1].texId = 0; // Plain texture
     sceneObjs[1].brightness = 0.2; // The light's brightness is 5 times this (below).
 
+    // ----Part I----
+    // Object 2 is the second light
+    // Add object 2nd light
+    addObject(55);  // Sphere for the second light
+    sceneObjs[2].loc = vec4(-2.0, 2.0, -2.0, 1.0);
+    sceneObjs[2].scale = 0.1;
+    sceneObjs[2].texId = 0;
+    sceneObjs[2].brightness = 0.2;
+
     addObject(rand() % numMeshes); // A test mesh
 
     // We need to enable the depth test to discard fragments that
@@ -355,7 +364,7 @@ void drawMesh(SceneObject sceneObj)
     // ----Part B----
     // Set the model matrix - this should combine translation, rotation and scaling based on what's
     // in the sceneObj structure (see near the top of the program).
-    // Scale object, then apply rotations X, Y, Z, then translate
+    // Scale object, then apply rotations Z, Y, X, then translate
 
     mat4 rotations = RotateX(sceneObj.angles[0]) * RotateY(sceneObj.angles[1]) * RotateZ(sceneObj.angles[2]);
     mat4 model = Translate(sceneObj.loc) * rotations * Scale(sceneObj.scale);
@@ -390,22 +399,35 @@ void display( void ){
     //  View Matrix =  Translate(camera's position) * Rotate on X axis * Rotate on Y axis
     view = Translate(0.0, 0.0, -viewDist) * RotateX(camRotUpAndOverDeg) * RotateY(camRotSidewaysDeg);
 
+    //  ----Part I----
+    //  Set second light's position
     SceneObject lightObj1 = sceneObjs[1];
-    vec4 lightPosition = view * lightObj1.loc ;
+    vec4 lightPosition1 = view * lightObj1.loc;
+    
+    SceneObject lightObj2 = sceneObjs[2];
+    vec4 lightPosition2 = view * lightObj2.loc;
 
-    glUniform4fv( glGetUniformLocation(shaderProgram, "LightPosition"), 1, lightPosition);
+    glUniform4fv( glGetUniformLocation(shaderProgram, "LightPosition1"), 1, lightPosition1);
+    CheckError();
+    glUniform4fv( glGetUniformLocation(shaderProgram, "LightPosition2"), 1, lightPosition2);
     CheckError();
     //  3 float vector for rgb colour information
-    glUniform3fv( glGetUniformLocation(shaderProgram, "lightColour"), 1, lightObj1.rgb);
+    glUniform3fv( glGetUniformLocation(shaderProgram, "lightColour1"), 1, lightObj1.rgb);
+    CheckError();
+    glUniform3fv( glGetUniformLocation(shaderProgram, "lightColour2"), 1, lightObj2.rgb);
     CheckError();
     //  Single float for brightness
-    glUniform1f( glGetUniformLocation(shaderProgram, "lightBrightness"), lightObj1.brightness);
+    glUniform1f( glGetUniformLocation(shaderProgram, "lightBrightness1"), lightObj1.brightness);
+    CheckError();
+    glUniform1f( glGetUniformLocation(shaderProgram, "lightBrightness2"), lightObj2.brightness);
     CheckError();
 
     for (int i=0; i < nObjects; i++) {
         SceneObject so = sceneObjs[i];
 
-        vec3 rgb = so.rgb * lightObj1.rgb * so.brightness * lightObj1.brightness * 2.0;
+        // ----Part G, Part H----
+        // Remove colour from lightObj1 in CPP file as being done in the fstart.glsl
+        vec3 rgb = so.rgb * so.brightness * 2.0;
         glUniform3fv( glGetUniformLocation(shaderProgram, "AmbientProduct"), 1, so.ambient * rgb );
         CheckError();
         glUniform3fv( glGetUniformLocation(shaderProgram, "DiffuseProduct"), 1, so.diffuse * rgb );
@@ -498,9 +520,19 @@ static void lightMenu(int id)
         setToolCallbacks(adjustRedGreen, mat2(1.0, 0, 0, 1.0),
                          adjustBlueBrightness, mat2(1.0, 0, 0, 1.0) );
     }
+    else if(id == 80){
+        toolObj = 2;
+        setToolCallbacks(adjustLocXZ, camRotZ(),
+                            adjustBrightnessY, mat2(1.0, 0.0, 0.0, 10.0));
+    }
+    else if(id == 81){
+        toolObj = 2;
+        setToolCallbacks(adjustRedGreen, mat2(1.0, 0.0, 0.0, 1.0),
+                            adjustBlueBrightness, mat2(1.0, 0.0, 0.0, 1.0));
+    }
     else {
         printf("Error in lightMenu\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 }
 
@@ -533,6 +565,9 @@ static void materialMenu(int id)
     if (currObject < 0) return;
     else toolObj = currObject;
 
+    //  ----Part C----
+    //  Menu addition and call to adjust ambience, diffusion, specularity
+    //  and shininess of object
     switch(id){
         case 10:
             setToolCallbacks(adjustRedGreen, mat2(1, 0, 0, 1),
@@ -546,41 +581,19 @@ static void materialMenu(int id)
             printf("Error in materialMenu\n");
             break;
     }
-
-/*
-    if (id==10) {
-        toolObj = currObject;
-        setToolCallbacks(adjustRedGreen, mat2(1, 0, 0, 1),
-                         adjustBlueBrightness, mat2(1, 0, 0, 1) );
-    }
-    //  You'll need to fill in the remaining menu items here.
-    //  ----Part C----
-    //  Menu addition and call to adjust ambience, diffusion, specularity
-    //  and shininess of object
-    if(id == 20){
-        toolObj = currObject;
-        setToolCallbacks(adjustAmbienceDiffusion, mat2(1, 0, 0, 1),
-                            adjustSpecularityShininess, mat2(1, 0, 0, 1));
-    }                                                
-    else {
-        printf("Error in materialMenu\n");
-    }*/
 }
 
-static void adjustAngleYX(vec2 angle_yx)
-{
+static void adjustAngleYX(vec2 angle_yx){
     sceneObjs[currObject].angles[1]+=angle_yx[0];
     sceneObjs[currObject].angles[0]+=angle_yx[1];
 }
 
-static void adjustAngleZTexscale(vec2 az_ts)
-{
+static void adjustAngleZTexscale(vec2 az_ts){
     sceneObjs[currObject].angles[2]+=az_ts[0];
     sceneObjs[currObject].texScale+=az_ts[1];
 }
 
-static void mainmenu(int id)
-{
+static void mainmenu(int id){
     deactivateTool();
     if (id == 41 && currObject>=0) {
         toolObj=currObject;
@@ -593,7 +606,7 @@ static void mainmenu(int id)
         setToolCallbacks(adjustAngleYX, mat2(400, 0, 0, -400),
                          adjustAngleZTexscale, mat2(400, 0, 0, 15) );
     }
-    if (id == 99) exit(0);
+    if (id == 99) exit(EXIT_SUCCESS);
 }
 
 static void makeMenu()
@@ -726,7 +739,7 @@ void fileErr(char* fileName)
     printf("Error reading file: %s\n", fileName);
     printf("When not in the CSSE labs, you will need to include the directory containing\n");
     printf("the models on the command line, or put it in the same folder as the exectutable.");
-    exit(1);
+    exit(EXIT_FAILURE);
 }
 
 //----------------------------------------------------------------------------

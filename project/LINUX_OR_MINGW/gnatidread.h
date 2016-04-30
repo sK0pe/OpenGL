@@ -154,7 +154,9 @@ static mat2 rotZ(float rotSidewaysDeg) {
 }
 
 //static vec2 currXY(float rotSidewaysDeg) { return rotZ(rotSidewaysDeg) * vec2(currRawX(), currRawY()); }
-static vec2 currMouseXYworld(float rotSidewaysDeg) { return rotZ(rotSidewaysDeg) * currMouseXYscreen(mouseX, mouseY); }
+static vec2 currMouseXYworld(float rotSidewaysDeg) { 
+    return rotZ(rotSidewaysDeg) * currMouseXYscreen(mouseX, mouseY);
+}
 
 // See the comment about 40 lines above
 static void setToolCallbacks( void(*newLeftCallback)(vec2 transformedMovement), mat2 leftT, 
@@ -170,12 +172,14 @@ static void setToolCallbacks( void(*newLeftCallback)(vec2 transformedMovement), 
     // std::cout << leftXYold << " " << middXYold << std::endl; // For debugging
 }
 
-vec2 clickPrev;
+//vec2 clickPrev;
 
 static void activateTool(int button) {
     currButton = button;
-    clickPrev = currMouseXYscreen(mouseX, mouseY);
-    prevPos = clickPrev;
+    //clickPrev = currMouseXYscreen(mouseX, mouseY);
+    //prevPos = clickPrev;
+    prevPos = currMouseXYscreen(mouseX, mouseY);
+
 
     // std::cout << clickOrigin << std::endl;  // For debugging
 }
