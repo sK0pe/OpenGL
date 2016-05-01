@@ -254,12 +254,15 @@ static void doRotate(){
 //  Will duplicate in place but allow user to move around before setting final
 //  position
 static void duplicateObject(int objectId){
-    if(nObjects == maxObjects) return;  // Check for boundary first
-    sceneObjs[nObjects] = sceneObjs[objectId];
-    toolObj = currObject = nObjects++;
-    setToolCallbacks(adjustLocXZ, camRotZ(), adjustScaleY, 
-        mat2(0.05, 0.0, 0.0, 10.0));
-    glutPostRedisplay();    //  Refresh screen
+    if(nObjects < maxObjects+1){   // Check for boundary first
+        sceneObjs[nObjects] = sceneObjs[objectId];
+        // Set duplicate to current and 
+        // Also set it to the tool so that features can be changed
+        toolObj = currObject = nObjects++;
+        setToolCallbacks(adjustLocXZ, camRotZ(), adjustScaleY, 
+            mat2(0.05, 0.0, 0.0, 10.0));
+        glutPostRedisplay();    //  Refresh screen
+    }
 }
 
 
@@ -271,7 +274,6 @@ static void deleteObject(int objectId){
     if(nObjects > projectMinObjects){
         //  Set current object to previous
         currObject = --nObjects;
-        //currObject = (nObjects > projectMinObjects) ? --nObjects : -1;
         toolObj = -1;
         doRotate();     // Return to camera modification
         glutPostRedisplay();    // Refresh 
@@ -675,7 +677,7 @@ static void makeMenu()
     glutAddSubMenu("Texture",texMenuId);
     glutAddSubMenu("Ground Texture",groundMenuId);
     glutAddSubMenu("Lights",lightMenuId);
-    glutAddMenuEntry("Duplicate Object", 89);   // Part J
+    glutAddMenuEntry("Duplicate Last Object", 89);   // Part J
     glutAddMenuEntry("Delete Last Object", 90);
     glutAddMenuEntry("EXIT", 99);
     glutAttachMenu(GLUT_RIGHT_BUTTON);
