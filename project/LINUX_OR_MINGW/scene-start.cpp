@@ -230,6 +230,19 @@ static void adjustScaleY(vec2 sy)
     sceneObjs[toolObj].scale+=sy[0]; sceneObjs[toolObj].loc[1]+=sy[1];
 }
 
+//  ----Part J----
+//  Function to duplicate an object and set it as current object
+//  Will duplicate in place but allow user to move around before setting final
+//  position
+static void duplicateObject(int objectId){
+    if(nObjects == maxObjects) return;  // Checkk for boundary first
+    sceneObjs[nObjects] = sceneObjs[objectId];
+    toolObj = currObject = nObjects++;
+    setToolCallbacks(adjustLocXZ, camRotZ(), adjustScaleY, 
+        mat2(0.0, 0.0, 0.0, 10.0));
+    glutPostRedisplay();    //  Refresh screen
+}
+
 
 //----------------------------------------------------------------------------
 //------Set the mouse buttons to rotate the camera----------------------------
@@ -606,6 +619,9 @@ static void mainmenu(int id){
         setToolCallbacks(adjustAngleYX, mat2(400, 0, 0, -400),
                          adjustAngleZTexscale, mat2(400, 0, 0, 15) );
     }
+    if(id == 89 && currObject >= 0){    // ----Part J----
+        duplicateObject(currObject);
+    }
     if (id == 99) exit(EXIT_SUCCESS);
 }
 
@@ -635,6 +651,7 @@ static void makeMenu()
     glutAddSubMenu("Texture",texMenuId);
     glutAddSubMenu("Ground Texture",groundMenuId);
     glutAddSubMenu("Lights",lightMenuId);
+    glutAddMenuEntry("Duplicate Object", 89);   // Part J
     glutAddMenuEntry("EXIT", 99);
     glutAttachMenu(GLUT_RIGHT_BUTTON);
 }

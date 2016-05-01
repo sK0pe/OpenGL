@@ -40,7 +40,8 @@ void main(){
     float Kd2 = max( dot(L2, N), 0.0 );
     vec3  diffuse1 = Kd1 * (lightColour1 * lightBrightness1) * DiffuseProduct;
     vec3  diffuse2 = Kd2 * (lightColour2 * lightBrightness2) * DiffuseProduct;
-
+    //  ----Part F----
+    //  Removed lightColour from specular calculation
     float Ks1 = pow( max(dot(N, H1), 0.0), Shininess );
     float Ks2 = pow( max(dot(N, H2), 0.0), Shininess );
     vec3  specular1 = Ks1 * lightBrightness1* SpecularProduct;
