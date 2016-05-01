@@ -69,6 +69,11 @@ typedef struct {
     float texScale;
 } SceneObject;
 
+// ----Part J----
+// Minimum number of objects to meet project defaults
+// Used by deleteObject() function
+const int projectMinObjects = 3;
+
 const int maxObjects = 1024; // Scenes with more than 1024 objects seem unlikely
 
 SceneObject sceneObjs[maxObjects]; // An array storing the objects currently in the scene.
@@ -230,20 +235,6 @@ static void adjustScaleY(vec2 sy)
     sceneObjs[toolObj].scale+=sy[0]; sceneObjs[toolObj].loc[1]+=sy[1];
 }
 
-//  ----Part J----
-//  Function to duplicate an object and set it as current object
-//  Will duplicate in place but allow user to move around before setting final
-//  position
-static void duplicateObject(int objectId){
-    if(nObjects == maxObjects) return;  // Checkk for boundary first
-    sceneObjs[nObjects] = sceneObjs[objectId];
-    toolObj = currObject = nObjects++;
-    setToolCallbacks(adjustLocXZ, camRotZ(), adjustScaleY, 
-        mat2(0.0, 0.0, 0.0, 10.0));
-    glutPostRedisplay();    //  Refresh screen
-}
-
-
 //----------------------------------------------------------------------------
 //------Set the mouse buttons to rotate the camera----------------------------
 //------around the centre of the scene.---------------------------------------
@@ -257,6 +248,36 @@ static void doRotate(){
     setToolCallbacks(adjustCamrotsideViewdist, mat2(400,0,0,-20),
                      adjustcamSideUp, mat2(400, 0, 0,-90) );
 }
+
+//  ----Part J----
+//  Function to duplicate an object and set it as current object
+//  Will duplicate in place but allow user to move around before setting final
+//  position
+static void duplicateObject(int objectId){
+    if(nObjects == maxObjects) return;  // Check for boundary first
+    sceneObjs[nObjects] = sceneObjs[objectId];
+    toolObj = currObject = nObjects++;
+    setToolCallbacks(adjustLocXZ, camRotZ(), adjustScaleY, 
+        mat2(0.05, 0.0, 0.0, 10.0));
+    glutPostRedisplay();    //  Refresh screen
+}
+
+
+//  --Part J----
+//  Function to delte the last generated object
+//  Will not delete the minimum specification of objects which includes the
+//  project requriements of 2 lights and the ground
+static void deleteObject(int objectId){
+    if(nObjects > projectMinObjects){
+        //  Set current object to previous
+        currObject = --nObjects;
+        //currObject = (nObjects > projectMinObjects) ? --nObjects : -1;
+        toolObj = -1;
+        doRotate();     // Return to camera modification
+        glutPostRedisplay();    // Refresh 
+    }
+}
+
                                      
 //------Add an object to the scene--------------------------------------------
 
@@ -622,6 +643,9 @@ static void mainmenu(int id){
     if(id == 89 && currObject >= 0){    // ----Part J----
         duplicateObject(currObject);
     }
+    if(id == 90 && currObject >= 0){    // ----Part J----
+        deleteObject(currObject);
+    }
     if (id == 99) exit(EXIT_SUCCESS);
 }
 
@@ -652,6 +676,7 @@ static void makeMenu()
     glutAddSubMenu("Ground Texture",groundMenuId);
     glutAddSubMenu("Lights",lightMenuId);
     glutAddMenuEntry("Duplicate Object", 89);   // Part J
+    glutAddMenuEntry("Delete Last Object", 90);
     glutAddMenuEntry("EXIT", 99);
     glutAttachMenu(GLUT_RIGHT_BUTTON);
 }
