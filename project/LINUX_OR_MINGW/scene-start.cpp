@@ -280,12 +280,6 @@ static void deleteObject(int objectId){
     }
 }
 
-
-//  ----Part K----
-//  Save scene to file
-static void saveScene(void){
-
-}
                                      
 //------Add an object to the scene--------------------------------------------
 
@@ -657,23 +651,62 @@ static void mainmenu(int id){
     if (id == 99) exit(EXIT_SUCCESS);
 }
 
+
+static void loadMenu(int id){
+    
+}
+
 // ----Part K----
 // Save Scene function
+// Writes save files
 static void saveMenu(int id){
-    char filename[20];
-    sprintf(filename, "Save: %d.sav", id);
-    FILE *fileStream = fopen(filename, "wb");
+    char saveName[10];
+    // Save file names are "Save: id.sav"
+    sprintf(saveName, "Save: %d.sav", id);
+    //  Open new file for saving binary information, delete if exists already
+    FILE *fileStream = fopen(saveName, "wb");
     if(fileStream == NULL){
-        fprintf(stderr, "Could not open '%s' to write savefile.\n", filename);
+        fprintf(stderr, "Could not open '%s' to write savefile.\n", saveName);
     }
-    // Writes the data, with size of specifying type, then number of data structures
-    // FILE pointer to push to
-    fwrite(&viewDist, sizeof(float), 1, fileStream);
-    fwrite(&camRotSidewaysDeg, sizeof(float), 1, fileStream);
-    fwrite(&camRotUpAndOverDeg, sizeof(float), 1, fileStream);
-    fwrite(&nObjects, sizeof(int), 1, fileStream);
-    fwrite(sceneObjs, sizeof(SceneObject), nObjects, fileStream);
-    fclose(fileStream);
+    else{
+        // Writes the data, with size of specifying type, then number of data structures
+        // FILE pointer to push to
+        fwrite(sceneObjs, sizeof(SceneObject), nObjects, fileStream);   // All object data in scene
+        fwrite(&nObjects, sizeof(int), 1, fileStream);              // number of scene objects
+        fwrite(&viewDist, sizeof(float), 1, fileStream);            // camera's zoom Z data
+        fwrite(&camRotSidewaysDeg, sizeof(float), 1, fileStream);   // camera's XZ data
+        fwrite(&camRotUpAndOverDeg, sizeof(float), 1, fileStream);  // camera's YZ data
+        // Close file stream pointer
+        fclose(fileStream);
+    }
+}
+
+// ----Part K----
+// Load Scene function
+// Reads save files
+static void saveMenu(int id){
+    char saveName[10];
+    // Save file names are "Save: id.sav"
+    sprintf(saveName, "Save: %d.sav", id);
+    //  Read binary file
+    FILE *fileStream = fopen(saveName, "rb");
+    if(fileStream != NULL){
+        fprintf(stderr, "Could not open '%s' to read savefile.\n", saveName);
+    }
+    else{
+        // Writes the data, with size of specifying type, then number of data structures
+        // FILE pointer to push to
+        fread(sceneObjs, sizeof(SceneObject), nObjects, fileStream);   // All object data in scene
+        fread(&nObjects, sizeof(int), 1, fileStream);              // number of scene objects
+        fread(&viewDist, sizeof(float), 1, fileStream);            // camera's zoom Z data
+        fread(&camRotSidewaysDeg, sizeof(float), 1, fileStream);   // camera's XZ data
+        fread(&camRotUpAndOverDeg, sizeof(float), 1, fileStream);  // camera's YZ data
+        // Close file stream pointer
+        fclose(fileStream);
+        currObj = nObjects -1;  //  Most recently added object is controlled
+        toolObj = -1;
+        doRotate();     // Redraw
+    }
 }
 
 static void makeMenu()
@@ -691,7 +724,7 @@ static void makeMenu()
     //  ----Part K----
     //  Creating save and load menus with an array of saves, max length 200 characters
     //  Cannot use ifstream / ofstream as not using C++ handlers
-    char saveMenuEntries[numSaves][200];
+    char saveMenuEntries[numSaves][10];
     for(int s = 0; s < numSaves; ++s){
         sprintf(saveMenuEntries[s], "Save: %d", s+1);
     }
