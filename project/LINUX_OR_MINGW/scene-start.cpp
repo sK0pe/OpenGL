@@ -73,7 +73,7 @@ typedef struct {
 // Minimum number of objects to meet project defaults
 // Used by deleteObject() function
 const int projectMinObjects = 3;
-
+const int numSaves = 20;
 const int maxObjects = 1024; // Scenes with more than 1024 objects seem unlikely
 
 SceneObject sceneObjs[maxObjects]; // An array storing the objects currently in the scene.
@@ -266,8 +266,8 @@ static void duplicateObject(int objectId){
 }
 
 
-//  --Part J----
-//  Function to delte the last generated object
+//  ----Part J----
+//  Function to delete the last generated object
 //  Will not delete the minimum specification of objects which includes the
 //  project requriements of 2 lights and the ground
 static void deleteObject(int objectId){
@@ -280,6 +280,12 @@ static void deleteObject(int objectId){
     }
 }
 
+
+//  ----Part K----
+//  Save scene to file
+static void saveScene(void){
+
+}
                                      
 //------Add an object to the scene--------------------------------------------
 
@@ -651,6 +657,25 @@ static void mainmenu(int id){
     if (id == 99) exit(EXIT_SUCCESS);
 }
 
+// ----Part K----
+// Save Scene function
+static void saveMenu(int id){
+    char filename[20];
+    sprintf(filename, "Save: %d.sav", id);
+    FILE *fileStream = fopen(filename, "wb");
+    if(fileStream == NULL){
+        fprintf(stderr, "Could not open '%s' to write savefile.\n", filename);
+    }
+    // Writes the data, with size of specifying type, then number of data structures
+    // FILE pointer to push to
+    fwrite(&viewDist, sizeof(float), 1, fileStream);
+    fwrite(&camRotSidewaysDeg, sizeof(float), 1, fileStream);
+    fwrite(&camRotUpAndOverDeg, sizeof(float), 1, fileStream);
+    fwrite(&nObjects, sizeof(int), 1, fileStream);
+    fwrite(sceneObjs, sizeof(SceneObject), nObjects, fileStream);
+    fclose(fileStream);
+}
+
 static void makeMenu()
 {
     int objectId = createArrayMenu(numMeshes, objectMenuEntries, objectMenu);
@@ -660,13 +685,27 @@ static void makeMenu()
     glutAddMenuEntry("Ambient/Diffuse/Specular/Shine",20);
 
     int texMenuId = createArrayMenu(numTextures, textureMenuEntries, texMenu);
+    
     int groundMenuId = createArrayMenu(numTextures, textureMenuEntries, groundMenu);
+
+    //  ----Part K----
+    //  Creating save and load menus with an array of saves, max length 200 characters
+    //  Cannot use ifstream / ofstream as not using C++ handlers
+    char saveMenuEntries[numSaves][200];
+    for(int s = 0; s < numSaves; ++s){
+        sprintf(saveMenuEntries[s], "Save: %d", s+1);
+    }
+    //  ----Part K----
+    int saveMenuId = createArrayMenu(numSaves, saveMenuEntries, saveMenu);
+
+    int loadMenuId = createArrayMenu(numSaves, saveMenuEntries, loadMenu);
 
     int lightMenuId = glutCreateMenu(lightMenu);
     glutAddMenuEntry("Move Light 1",70);
     glutAddMenuEntry("R/G/B/All Light 1",71);
     glutAddMenuEntry("Move Light 2",80);
     glutAddMenuEntry("R/G/B/All Light 2",81);
+
 
     glutCreateMenu(mainmenu);
     glutAddMenuEntry("Rotate/Move Camera",50);
@@ -679,6 +718,8 @@ static void makeMenu()
     glutAddSubMenu("Lights",lightMenuId);
     glutAddMenuEntry("Duplicate Last Object", 89);   // Part J
     glutAddMenuEntry("Delete Last Object", 90);
+    glutAddMenuEntry("Save Scene", saveMenuId);     // Part K
+    glutAddMenuEntry("Load Scene", loadMenuId);     // Part K
     glutAddMenuEntry("EXIT", 99);
     glutAttachMenu(GLUT_RIGHT_BUTTON);
 }
