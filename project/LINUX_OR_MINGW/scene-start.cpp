@@ -4,6 +4,9 @@
 #include <stdlib.h>
 #include <dirent.h>
 #include <time.h>
+#include <fstream>
+#include <string>
+#include <iostream>
 
 // Open Asset Importer header files (in ../../assimp--3.0.1270/include)
 // This is a standard open source library for loading meshes, see gnatidread.h
@@ -280,13 +283,7 @@ static void deleteObject(int objectId){
     }
 }
 
-
-//  ----Part K----
-//  Save scene to file
-static void saveScene(void){
-
-}
-                                     
+                                  
 //------Add an object to the scene--------------------------------------------
 
 static void addObject(int id)
@@ -660,20 +657,40 @@ static void mainmenu(int id){
 // ----Part K----
 // Save Scene function
 static void saveMenu(int id){
-    char filename[20];
-    sprintf(filename, "Save: %d.sav", id);
-    FILE *fileStream = fopen(filename, "wb");
-    if(fileStream == NULL){
-        fprintf(stderr, "Could not open '%s' to write savefile.\n", filename);
+    //  output file stream in binary mode
+    string fileName = "Save: " + to_string(id) + ".sav";
+    ofstream saveFile(fileName, ios::binary);
+    if(saveFile.is_open()){
+        saveFile.write((char*)&nObjects, sizeof(int));
+        saveFile.write((char*)sceneObjs, sizeof(SceneObject)*nObjects);
+        saveFile.write((char*)&viewDist, sizeof(float));
+        saveFile.write((char*)&camRotSidewaysDeg, sizeof(float));
+        saveFile.write((char*)&camRotUpAndOverDeg, sizeof(float));
+        saveFile.close();   // close output file stream
     }
-    // Writes the data, with size of specifying type, then number of data structures
-    // FILE pointer to push to
-    fwrite(&viewDist, sizeof(float), 1, fileStream);
-    fwrite(&camRotSidewaysDeg, sizeof(float), 1, fileStream);
-    fwrite(&camRotUpAndOverDeg, sizeof(float), 1, fileStream);
-    fwrite(&nObjects, sizeof(int), 1, fileStream);
-    fwrite(sceneObjs, sizeof(SceneObject), nObjects, fileStream);
-    fclose(fileStream);
+    else{
+        cerr << "Could not open file '"<< fileName << "' to write savefile.\n";
+    }
+}
+
+// ----Part K----
+// Load Scene function
+static void loadMenu(int id){
+    // input file stream in binary mode
+    string fileName = "Save: " + to_string(id) + ".sav";
+    ifstream saveFile(fileName, ios::binary);
+    if(saveFile.is_open()){
+        saveFile.read((char*)&nObjects, sizeof(int));
+        saveFile.read((char*)sceneObjs, sizeof(SceneObject)*nObjects);
+        saveFile.read((char*)&viewDist, sizeof(float));
+        saveFile.read((char*)&camRotSidewaysDeg, sizeof(float));
+        saveFile.read((char*)&camRotUpAndOverDeg, sizeof(float));
+        saveFile.close();  // close input file stream
+        doRotate();
+    }
+    else{
+        cerr << "Could not open save file '" << fileName << "'.\n";
+    }
 }
 
 static void makeMenu()
@@ -691,7 +708,7 @@ static void makeMenu()
     //  ----Part K----
     //  Creating save and load menus with an array of saves, max length 200 characters
     //  Cannot use ifstream / ofstream as not using C++ handlers
-    char saveMenuEntries[numSaves][200];
+    char saveMenuEntries[numSaves][128];
     for(int s = 0; s < numSaves; ++s){
         sprintf(saveMenuEntries[s], "Save: %d", s+1);
     }
@@ -718,8 +735,8 @@ static void makeMenu()
     glutAddSubMenu("Lights",lightMenuId);
     glutAddMenuEntry("Duplicate Last Object", 89);   // Part J
     glutAddMenuEntry("Delete Last Object", 90);
-    glutAddMenuEntry("Save Scene", saveMenuId);     // Part K
-    glutAddMenuEntry("Load Scene", loadMenuId);     // Part K
+    glutAddSubMenu("Save Scene", saveMenuId);     // Part K
+    glutAddSubMenu("Load Scene", loadMenuId);     // Part K
     glutAddMenuEntry("EXIT", 99);
     glutAttachMenu(GLUT_RIGHT_BUTTON);
 }

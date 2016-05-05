@@ -3,7 +3,7 @@
 # Du Huynh
 # April 2016
 
-GCC_OPTIONS = -I ../../include -I ../../assimp-3.1.1/include/ \
+GCC_OPTIONS = -std=c++11 -I ../../include -I ../../assimp-3.1.1/include/ \
 	-w -fpermissive -O3 -g
 GL_OPTIONS = -lglut -lGL -lXmu -lX11 -lm -Wl,-rpath,. -lGLEW
 
