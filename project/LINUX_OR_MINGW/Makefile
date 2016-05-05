@@ -2,6 +2,8 @@
 #
 # Du Huynh
 # April 2016
+# Pradyumn Vij
+# May 2016 modified, to add c++ 11 functionality
 
 GCC_OPTIONS = -std=c++11 -I ../../include -I ../../assimp-3.1.1/include/ \
 	-w -fpermissive -O3 -g
