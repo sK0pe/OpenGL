@@ -4,9 +4,9 @@
 #include <stdlib.h>
 #include <dirent.h>
 #include <time.h>
-#include <fstream>
-#include <string>
-#include <iostream>
+#include <fstream>  // Part K for C++11 fstream handling
+#include <string>   // Part K for C++11 fstream handling
+#include <iostream> // Part K for C++11 fstream handling
 
 // Open Asset Importer header files (in ../../assimp--3.0.1270/include)
 // This is a standard open source library for loading meshes, see gnatidread.h
