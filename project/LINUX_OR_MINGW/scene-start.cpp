@@ -25,10 +25,10 @@ using namespace std;        // Import the C++ standard functions (e.g., min)
 
 
 //  ----Part 2 B3---
-//  Added vBoneIds, vBoneWeights, boneTransformsU
+//  Added vBoneIDs, vBoneWeights, boneTransformsU
 // IDs for the GLSL program and GLSL variables.
 GLuint shaderProgram; // The number identifying the GLSL shader program
-GLuint vPosition, vNormal, vTexCoord, vBoneIds, vBoneWeights; // IDs for vshader input vars (from glGetAttribLocation)
+GLuint vPosition, vNormal, vTexCoord, vBoneIDs, vBoneWeights; // IDs for vshader input vars (from glGetAttribLocation)
 GLuint projectionU, modelViewU, uBoneTransforms; // IDs for uniform variables (from glGetUniformLocation)
 
 // ----Part D----
@@ -364,7 +364,7 @@ void init( void )
     vNormal = glGetAttribLocation( shaderProgram, "vNormal" );
     // ----Part 2 B3----
     // Initialise additional GLUints
-    vBoneIds = glGetAttribLocation(shaderProgram, "boneIDs");
+    vBoneIDs = glGetAttribLocation(shaderProgram, "boneIDs");
     vBoneWeights = glGetAttribLocation(shaderProgram, "boneWeights");
 
 
@@ -452,6 +452,20 @@ void drawMesh(SceneObject sceneObj)
     glBindVertexArray( vaoIDs[sceneObj.meshId] );
     CheckError();
 
+	// ----Part 2 B7----
+	// add code for animation
+    int nBones = meshes[sceneObj.meshId]->mNumBones;
+    if(nBones == 0)  nBones = 1;  // If no bones, just a single identity matrix is used
+
+    // get boneTransforms for the first (0th) animation at the given time (a float measured in frames)
+    //    (Replace <POSE_TIME> appropriately with a float expression giving the time relative to
+    //     the start of the animation, measured in frames, like the frame numbers in Blender.)
+    mat4 boneTransforms[nBones];     // was: mat4 boneTransforms[mesh->mNumBones];
+    calculateAnimPose(meshes[sceneObj.meshId], scenes[sceneObj.meshId], 0, <POSE_TIME>, boneTransforms);
+    glUniformMatrix4fv(uBoneTransforms, nBones, GL_Tx`RUE, (const GLfloat *)boneTransforms);
+
+
+
     glDrawElements(GL_TRIANGLES, meshes[sceneObj.meshId]->mNumFaces * 3,
                    GL_UNSIGNED_INT, NULL);
     CheckError();
@@ -460,7 +474,7 @@ void drawMesh(SceneObject sceneObj)
 //----------------------------------------------------------------------------
 
 void display( void ){
-    numDisplayCalls++;
+	numDisplayCalls++;
 
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
     CheckError(); // May report a harmless GL_INVALID_OPERATION with GLEW on the first frame
