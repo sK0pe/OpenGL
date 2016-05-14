@@ -25,10 +25,10 @@ uniform mat4 boneTransforms[64];    // ----Part2 A1 variables----
 
 void main(){
     // ----Part 2 A2----
-    mat4 boneTransform = boneWeights[0] * bone Transforms[boneIDs[0]] +
-                            boneWeights[1] * bone Transforms[boneIDs[1]] +
-                                boneWeights[2] * bone Transforms[boneIDs[2]] +
-                                    boneWeights[3] * bone Transforms[boneIDs[3]];
+    mat4 boneTransform = boneWeights[0] * boneTransforms[boneIDs[0]] +
+                            boneWeights[1] * boneTransforms[boneIDs[1]] +
+                                boneWeights[2] * boneTransforms[boneIDs[2]] +
+                                    boneWeights[3] * boneTransforms[boneIDs[3]];
 
     vec4 transformedPosition = boneTransform * vPosition;
     vec3 transformedNormal = mat3(boneTransform) * vNormal;

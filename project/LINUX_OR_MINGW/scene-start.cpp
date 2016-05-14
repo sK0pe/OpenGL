@@ -24,7 +24,7 @@ GLint windowHeight=640, windowWidth=960;
 using namespace std;        // Import the C++ standard functions (e.g., min) 
 
 
-//  ----Part 2 B3---
+//  ----Part 2D B3---
 //  Added vBoneIDs, vBoneWeights, boneTransformsU
 // IDs for the GLSL program and GLSL variables.
 GLuint shaderProgram; // The number identifying the GLSL shader program
@@ -50,7 +50,7 @@ int numDisplayCalls = 0; // Used to calculate the number of frames per second
 // Uses the type aiMesh from ../../assimp--3.0.1270/include/assimp/mesh.h
 //                           (numMeshes is defined in gnatidread.h)
 aiMesh* meshes[numMeshes]; // For each mesh we have a pointer to the mesh to draw
-const aiScene* scenes[numMeshes];	// ----Part 2 B4----
+const aiScene* scenes[numMeshes];	// ----Part 2D B4----
 GLuint vaoIDs[numMeshes]; // and a corresponding VAO ID from glGenVertexArrays
 
 // -----Textures--------------------------------------------------------------
@@ -73,6 +73,12 @@ typedef struct {
     int meshId;
     int texId;
     float texScale;
+    // ----Part 2D B7----
+    unsigned int startAnimation; // Time when object starts animation
+    float moveSpeed;	// speed of animated SceneObject
+    float moveDistance;	// distance an animated SceneObject travels
+    int numFrames;	// number of frames	
+    float animationsInCycle; // number of animaitons in a cycle;
 } SceneObject;
 
 // ----Part J----
@@ -86,6 +92,12 @@ SceneObject sceneObjs[maxObjects]; // An array storing the objects currently in 
 int nObjects = 0;    // How many objects are currenly in the scene.
 int currObject = -1; // The current object
 int toolObj = -1;    // The object currently being modified
+
+// ----Part 2D B7----
+// Pause Functionality
+unsigned int pauseAll = 0;
+float poseTime = 0.0;
+
 
 //----------------------------------------------------------------------------
 //
@@ -338,6 +350,27 @@ static void addObject(int id)
     sceneObjs[nObjects].texId = rand() % numTextures;
     sceneObjs[nObjects].texScale = 2.0;
 
+    //	----Part 2D B7----
+    //  Check if animated object, if so determine animation variables
+    if(id > 55){	//  if animated
+    	if(pauseAll == 0){	//  if not paused start animation
+    		sceneObjs[nObjects].startAnimation = glutGet(GLUT_ELAPSED_TIME);
+    	}
+    	else{	//  Start animating when unpaused
+    		sceneObjs[nObjects].startAnimation = pauseAll;
+    	}
+    	sceneObjs[nObjects].moveSpeed = 1.0;
+	    sceneObjs[nObjects].moveDistance = 5.0;
+	    sceneObjs[nObjects].animationsInCycle = 3.0;	// may need to change if becomes variable
+	    sceneObjs[nObjects].numFrames = 40;	// may need to change if becomes variable
+    }
+    else{		//  if not animated
+    	sceneObjs[nObjects].moveSpeed = 0.0;
+	    sceneObjs[nObjects].moveDistance = 0.0;
+	    sceneObjs[nObjects].animationsInCycle = 0.0;
+	    sceneObjs[nObjects].startAnimation = 0.0;
+    }
+
     toolObj = currObject = nObjects++;
     setToolCallbacks(adjustLocXZ, camRotZ(),
                      adjustScaleY, mat2(0.05, 0, 0, 10.0) );
@@ -414,10 +447,10 @@ void init( void )
 
 //----------------------------------------------------------------------------
 
+
 void drawMesh(SceneObject sceneObj)
 {
-
-    // Activate a texture, loading if needed.
+    // Load Texture
     loadTextureIfNotAlreadyLoaded(sceneObj.texId);
     glActiveTexture(GL_TEXTURE0 );
     glBindTexture(GL_TEXTURE_2D, textureIDs[sceneObj.texId]);
@@ -461,10 +494,8 @@ void drawMesh(SceneObject sceneObj)
     //    (Replace <POSE_TIME> appropriately with a float expression giving the time relative to
     //     the start of the animation, measured in frames, like the frame numbers in Blender.)
     mat4 boneTransforms[nBones];     // was: mat4 boneTransforms[mesh->mNumBones];
-    calculateAnimPose(meshes[sceneObj.meshId], scenes[sceneObj.meshId], 0, <POSE_TIME>, boneTransforms);
-    glUniformMatrix4fv(uBoneTransforms, nBones, GL_Tx`RUE, (const GLfloat *)boneTransforms);
-
-
+    calculateAnimPose(meshes[sceneObj.meshId], scenes[sceneObj.meshId], 0, poseTime, boneTransforms);
+    glUniformMatrix4fv(uBoneTransforms, nBones, GL_TRUE, (const GLfloat *)boneTransforms);
 
     glDrawElements(GL_TRIANGLES, meshes[sceneObj.meshId]->mNumFaces * 3,
                    GL_UNSIGNED_INT, NULL);
@@ -521,10 +552,57 @@ void display( void ){
         glUniform3fv( glGetUniformLocation(shaderProgram, "SpecularProduct"), 1, so.specular * rgb );
         glUniform1f( glGetUniformLocation(shaderProgram, "Shininess"), so.shine );
         CheckError();
+        //----Part 2D B7---- Animation------------------------------------------
+        poseTime = 1.0;
+        vec4 move = 0.0;
+        if(sceneObjs[i].meshId > 55){	//  Check if animated
+        	float elapsedTime = 0.0;
+        	// Animation loops must be 0 or highter
+        	if(sceneObjs[i].animationsInCycle < 0.0){
+        		sceneObjs[i].animationsInCycle = 0.0;
+        	}
+        	//sceneObjs[i].animationsInCycle = max(sceneObjs[i].animationsInCycle, 0.0);
+        	// Don't divide by zero
+        	if(sceneObjs[i].moveDistance < 0.0){
+        		sceneObjs[i].moveDistance = 0.0;
+        	}
+        	if(sceneObjs[i].moveSpeed < 0.0){
+        		sceneObjs[i].moveSpeed = 0.0;
+        	}
+        	if(pauseAll != 0){	//	If paused
+        		//  time at pause state since start of animation
+        		elapsedTime = float(pauseAll - sceneObjs[i].startAnimation)/1000.0;
+        	}
+        	else{
+        		//  time since start of animation
+        		elapsedTime = float(glutGet(GLUT_ELAPSED_TIME) - sceneObjs[i].startAnimation)/1000.0;
+        	}
+        	//  Time for movement
+        	float moveTime = sceneObjs[i].moveDistance / sceneObjs[i].moveSpeed;
+        	// poseTime from 0 to numFrames, number of animation loops in a half movement cycle
+        	poseTime = fmod((0.5 + 0.5 * sin(elapsedTime / moveTime * 2 * M_PI))
+        					* sceneObjs[i].animationsInCycle
+        						* sceneObjs[i].numFrames, 
+        							sceneObjs[i].numFrames);
+        	//	Transform along z axis only in the direction the mesh is facing
+        	//  distance varies from 0.5 to -0.5
+        	move = RotateZ(sceneObjs[i].angles[2]) 
+        			* RotateY(sceneObjs[i].angles[1])
+        				* RotateX(sceneObjs[i].angles[0]) 
+        					* vec4(0.0,
+        							0.0, 
+        								-0.5 * sceneObjs[i].moveDistance * sin(elapsedTime / moveTime * 2 * M_PI),
+        							 		0.0);
+        	//  Displace object by move along z-axis
+        	sceneObjs[i].loc += move;
 
+        }
         drawMesh(sceneObjs[i]);
-    }
+        // After mesh drawn, return object for next display call
+        sceneObjs[i].loc -= move;
 
+        //---------------------------------------------------------------------
+    }
     glutSwapBuffers();
 }
 
@@ -592,6 +670,20 @@ static void adjustSpecularityShininess(vec2 specularityShininess){
     sceneObjs[toolObj].shine += specularityShininess[1];
 }
 
+//	----Part 2D B7----
+//	Adjust the move speed of animated objects with first element.
+//  Adjusts the frames per cycle with second element
+static void adjustAnimationSpeed(vec2 speedFrames){
+	sceneObjs[toolObj].moveSpeed += speedFrames[0];
+	sceneObjs[toolObj].animationsInCycle += speedFrames[1];
+}
+
+//	----Part 2D B7----
+//  Adjust distance that object moves over
+static void adjustMoveDistance(vec2 distance){
+	sceneObjs[toolObj].moveDistance += distance[0];
+	sceneObjs[toolObj].moveDistance += distance[1];
+}
 
 static void lightMenu(int id)
 {
@@ -693,6 +785,30 @@ static void mainmenu(int id){
         setToolCallbacks(adjustAngleYX, mat2(400, 0, 0, -400),
                          adjustAngleZTexscale, mat2(400, 0, 0, 15) );
     }
+    if(id == 85 && currObject >= 0){	//	 ----Part 2D B7----
+    	//  Set animation loops and move distance for an object mesh
+    	setToolCallbacks(adjustAnimationSpeed, mat2(10, 0, 0, 5),
+    						adjustMoveDistance, mat2(0, 0, 0, 10));
+    }
+    if(id == 86 && currObject >= 0){	// ----Part 2D B7----  Reset all
+    	//  Reset object meshes to default positions
+    	if(pauseAll == 0){	// Begin animation immediately
+    		sceneObjs[nObjects].startAnimation = glutGet(GLUT_ELAPSED_TIME);
+    	}
+    	else{	// Begin animation on resume
+    		sceneObjs[nObjects].startAnimation = pauseAll;
+    	}
+    }
+    if(id == 87){	// ----Part 2D B7----  Pause all animation
+    	pauseAll = glutGet(GLUT_ELAPSED_TIME);
+    }
+    if(id == 88){	//   ----Part 2D B7----  Resume all animation
+    	unsigned int resumeAll = glutGet(GLUT_ELAPSED_TIME);
+    	for(int p = 0; p < nObjects; ++p){
+    		sceneObjs[p].startAnimation += resumeAll - pauseAll;
+    	}
+    	pauseAll = 0;
+    }
     if(id == 89 && currObject >= 0){    // ----Part J----
         duplicateObject(currObject);
     }
@@ -783,6 +899,10 @@ static void makeMenu()
     glutAddSubMenu("Lights",lightMenuId);
     glutAddMenuEntry("Duplicate Last Object", 89);   // Part J
     glutAddMenuEntry("Delete Last Object", 90);
+    glutAddMenuEntry("Animation Speed/Animation Distance", 85);	// Part 2D B7
+    glutAddMenuEntry("Reset Object's Animation", 86);	// Part 2D B7
+    glutAddMenuEntry("Pause Animation", 87);	// Part 2D B7
+    glutAddMenuEntry("Resume Animation", 88);	// Part 2D B7
     glutAddSubMenu("Save Scene", saveMenuId);     // Part K
     glutAddSubMenu("Load Scene", loadMenuId);     // Part K
     glutAddMenuEntry("EXIT", 99);
