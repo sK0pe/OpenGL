@@ -72,6 +72,8 @@ void main(){
     // Specular component always shines white, separate from colour
     // Specular transfers information on degree of shininess
     // Specular is independent of texture colours, added separately
+    // ----Part 2D A----
+    // Added the texScale modifier to texCoord rather than static 2.0
     fColor = colour * texture2D( texture, texCoord * texScale) 
                                 + vec4(specular1*attenuation + specular2, 1.0);
 }
