@@ -25,7 +25,7 @@ uniform sampler2D texture;
 
 void main(){
     // Unit direction vectors for Blinn-Phong shading calculation
-    vec3 N = normalize( cameraPosition );	// Normal vertex from camera perspective
+    vec3 N = normalize( cameraPosition );	// Vertex from camera perspective
     vec3 E = normalize( vectorToCamera );   // Direction to the eye/camera
     vec3 L1 = normalize( vectorToLight1 );  // Direction to the light source 1
     vec3 L2 = normalize( vectorToLight2 );	// Direction to the light source 2
@@ -60,14 +60,18 @@ void main(){
     // ----Part F----
     // Distance for dropoff of light defined
     // Dropoff is only on light 1.
-    float attenuation = 1 / (1 + 0.25* length(vectorToLight1) * length(vectorToLight1));
+    float attenuation = 1 / 
+                    (1 + 0.25* length(vectorToLight1) * length(vectorToLight1));
 
     // ----Part H----
     // Only ambience, global and diffusion are passed to rgb component
     // colour.a = 1.0 (full opacity)
-    vec4 colour = vec4(globalAmbient + ((ambient1 + diffuse1) * attenuation) + ambient2 + diffuse2, 1.0);
+    vec4 colour = 
+        vec4(globalAmbient + ((ambient1 + diffuse1) * attenuation)
+                                                    + ambient2 + diffuse2, 1.0);
     // Specular component always shines white, separate from colour
     // Specular transfers information on degree of shininess
     // Specular is independent of texture colours, added separately
-    fColor = colour * texture2D( texture, texCoord * texScale) + vec4(specular1*attenuation + specular2, 1.0);
+    fColor = colour * texture2D( texture, texCoord * texScale) 
+                                + vec4(specular1*attenuation + specular2, 1.0);
 }
