@@ -91,6 +91,8 @@ int nObjects = 0;    // How many objects are currenly in the scene.
 int currObject = -1; // The current object
 int toolObj = -1;    // The object currently being modified
 
+bool pauseScene = false;
+
 
 //----------------------------------------------------------------------------
 //
@@ -443,7 +445,7 @@ void init( void ){
 //------------------------------------------------------------------------------
 //	----Part 2D B7----
 //  Animation helper function for Draw Mesh
-void getTimeStamps(float &poseTime, float &moveTime, SceneObject &object){
+void setTimeStamps(float &poseTime, float &moveTime, SceneObject &object){
 	float animationCycles = 3.0;
 	// time elapsed in seconds
 	float elapsedTime = glutGet(GLUT_ELAPSED_TIME)/1000.0;
@@ -482,8 +484,9 @@ void drawMesh(SceneObject sceneObj){
     //  Animation check
     float poseTime = 0.0;
     float moveTime = 0.0;
-    if(sceneObj.meshId > 55){	// if mesh is animated
-    	getTimeStamps(poseTime, moveTime, sceneObj);
+    // animated and not paused
+    if(sceneObj.meshId > 55 && !pauseScene){
+    	setTimeStamps(poseTime, moveTime, sceneObj);
     }
 
     // Activate Textures
@@ -789,6 +792,12 @@ static void mainmenu(int id){
     	setToolCallbacks(adjustMoveSpeedDistance, mat2(24.0, 0, 0, 5.0),
     						adjustMoveSpeedDistance, mat2(24.0, 0, 0, 5.0));
     }
+    if(id == 87){	//	 ----Part 2D B7----
+    	pauseScene = true;
+    }
+    if(id == 88){	//	 ----Part 2D B7----
+    	pauseScene = false;
+    }
     if(id == 89 && currObject >= 0){    // ----Part J----
         duplicateObject(currObject);
     }
@@ -880,7 +889,8 @@ static void makeMenu()
     glutAddSubMenu("Lights",lightMenuId);
     glutAddMenuEntry("Duplicate Last Object", 89);   // Part J
     glutAddMenuEntry("Delete Last Object", 90);		// Part J
-    glutAddMenuEntry("Move Distance / Period", 85);	// Part 2D B7
+    glutAddMenuEntry("Move Speed / Distance", 85);	// Part 2D B7
+    glutAddMenuEntry("Pause Scene", 87);	// Part 2D B7
     glutAddSubMenu("Save Scene", saveMenuId);     // Part K
     glutAddSubMenu("Load Scene", loadMenuId);     // Part K
     glutAddMenuEntry("EXIT", 99);
