@@ -17,16 +17,16 @@ Info,  T0: CalcTangentsProcess finished. Tangents have been calculated
 Info,  T0: JoinVerticesProcess finished | Verts in: 240 out: 76 | ~68.3%
 Info,  T0: Cache relevant are 1 meshes (80 faces). Average output ACMR is 0.950000
 Info,  T0: Leaving post processing pipeline
-Info,  T0: Load models-textures/model44.x
+Info,  T0: Load models-textures/model50.x
 Info,  T0: Found a matching importer for this file format
 Info,  T0: Import root directory is 'models-textures/'
 Info,  T0: Entering post processing pipeline
 Info,  T0: Points: 0, Lines: 0, Triangles: 1, Polygons: 0 (Meshes, X = removed)
 Info,  T0: CalcTangentsProcess finished. Tangents have been calculated
-Info,  T0: JoinVerticesProcess finished | Verts in: 19491 out: 5253 | ~73.0%
-Info,  T0: Cache relevant are 1 meshes (6497 faces). Average output ACMR is 0.965523
+Info,  T0: JoinVerticesProcess finished | Verts in: 32097 out: 8508 | ~73.5%
+Info,  T0: Cache relevant are 1 meshes (10699 faces). Average output ACMR is 0.944948
 Info,  T0: Leaving post processing pipeline
-Info,  T0: Load models-textures/model56.x
+Info,  T0: Load models-textures/model57.x
 Info,  T0: Found a matching importer for this file format
 Info,  T0: Import root directory is 'models-textures/'
 Info,  T0: Entering post processing pipeline
@@ -35,7 +35,7 @@ Info,  T0: Points: 0, Lines: 0, Triangles: 1, Polygons: 0 (Meshes, X = removed)
 Warn,  T0: Simplified dummy tracks with just one key
 Skipping one or more lines with the same contents
 Info,  T0: CalcTangentsProcess finished. Tangents have been calculated
-Info,  T0: JoinVerticesProcess finished | Verts in: 37024 out: 10823 | ~70.8%
-Info,  T0: Removed 1418 weights. Input bones: 12. Output bones: 12
-Info,  T0: Cache relevant are 1 meshes (18336 faces). Average output ACMR is 0.775469
+Info,  T0: JoinVerticesProcess finished | Verts in: 1968 out: 1094 | ~44.4%
+Info,  T0: Removed 378 weights. Input bones: 9. Output bones: 9
+Info,  T0: Cache relevant are 1 meshes (968 faces). Average output ACMR is 1.186983
 Info,  T0: Leaving post processing pipeline

@@ -628,30 +628,8 @@ void display( void ){
 }
 
 //------------------------------------------------------------------------------
-//------Menus-------------------------------------------------------------------
+//------Modifiers---------------------------------------------------------------
 //------------------------------------------------------------------------------
-
-static void objectMenu(int id)
-{
-    deactivateTool();
-    addObject(id);
-}
-
-static void texMenu(int id)
-{
-    deactivateTool();
-    if (currObject>=0) {
-        sceneObjs[currObject].texId = id;
-        glutPostRedisplay();
-    }
-}
-
-static void groundMenu(int id)
-{
-    deactivateTool();
-    sceneObjs[0].texId = id;
-    glutPostRedisplay();
-}
 
 static void adjustBrightnessY(vec2 by)
 {
@@ -700,6 +678,64 @@ static void adjustMoveSpeedDistance(vec2 speedDistance){
 		max(0.0f, sceneObjs[currObject].moveDistance + speedDistance[1]);
 }
 
+static void adjustAngleYX(vec2 angle_yx){
+    sceneObjs[currObject].angles[1]+=angle_yx[0];
+    sceneObjs[currObject].angles[0]+=angle_yx[1];
+}
+
+static void adjustAngleZTexscale(vec2 az_ts){
+    sceneObjs[currObject].angles[2]+=az_ts[0];
+    sceneObjs[currObject].texScale+=az_ts[1];
+}
+
+//------------------------------------------------------------------------------
+//------Menus-------------------------------------------------------------------
+//------------------------------------------------------------------------------
+
+static int createArrayMenu(int size, const char menuEntries[][128], void(*menuFn)(int))
+{
+    int nSubMenus = (size-1)/10 + 1;
+    int subMenus[nSubMenus];
+
+    for (int i=0; i < nSubMenus; i++) {
+        subMenus[i] = glutCreateMenu(menuFn);
+        for (int j = i*10+1; j <= min(i*10+10, size); j++)
+            glutAddMenuEntry( menuEntries[j-1] , j);
+        CheckError();
+    }
+    int menuId = glutCreateMenu(menuFn);
+
+    for (int i=0; i < nSubMenus; i++) {
+        char num[6];
+        sprintf(num, "%d-%d", i*10+1, min(i*10+10, size));
+        glutAddSubMenu(num,subMenus[i]);
+        CheckError();
+    }
+    return menuId;
+}
+
+static void objectMenu(int id)
+{
+    deactivateTool();
+    addObject(id);
+}
+
+static void texMenu(int id)
+{
+    deactivateTool();
+    if (currObject>=0) {
+        sceneObjs[currObject].texId = id;
+        glutPostRedisplay();
+    }
+}
+
+static void groundMenu(int id)
+{
+    deactivateTool();
+    sceneObjs[0].texId = id;
+    glutPostRedisplay();
+}
+
 static void lightMenu(int id)
 {
     deactivateTool();
@@ -730,29 +766,6 @@ static void lightMenu(int id)
     }
 }
 
-static int createArrayMenu(int size, const char menuEntries[][128], void(*menuFn)(int))
-{
-    int nSubMenus = (size-1)/10 + 1;
-    int subMenus[nSubMenus];
-
-    for (int i=0; i < nSubMenus; i++) {
-        subMenus[i] = glutCreateMenu(menuFn);
-        for (int j = i*10+1; j <= min(i*10+10, size); j++)
-            glutAddMenuEntry( menuEntries[j-1] , j);
-        CheckError();
-    }
-    int menuId = glutCreateMenu(menuFn);
-
-    for (int i=0; i < nSubMenus; i++) {
-        char num[6];
-        sprintf(num, "%d-%d", i*10+1, min(i*10+10, size));
-        glutAddSubMenu(num,subMenus[i]);
-        CheckError();
-    }
-    return menuId;
-}
-
-
 static void materialMenu(int id)
 {
     deactivateTool();
@@ -777,15 +790,6 @@ static void materialMenu(int id)
     }
 }
 
-static void adjustAngleYX(vec2 angle_yx){
-    sceneObjs[currObject].angles[1]+=angle_yx[0];
-    sceneObjs[currObject].angles[0]+=angle_yx[1];
-}
-
-static void adjustAngleZTexscale(vec2 az_ts){
-    sceneObjs[currObject].angles[2]+=az_ts[0];
-    sceneObjs[currObject].texScale+=az_ts[1];
-}
 
 static void mainmenu(int id){
     deactivateTool();
@@ -814,6 +818,8 @@ static void mainmenu(int id){
     if (id == 99) exit(EXIT_SUCCESS);
 }
 
+// ----Part 2D B7----
+// Movement type menu
 static void moveMenu(int id){
 	deactivateTool();
 	if(id == 86 && currObject >= 0){
