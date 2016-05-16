@@ -77,6 +77,7 @@ typedef struct {
     // ----Part 2D B7----
     float moveSpeed;	// speed of animated SceneObject
     float moveDistance;	// distance an animated SceneObject travels
+    float moveType;		// type of movement
 } SceneObject;
 
 // ----Part J----
@@ -90,8 +91,6 @@ SceneObject sceneObjs[maxObjects]; // An array storing the objects in the scene.
 int nObjects = 0;    // How many objects are currenly in the scene.
 int currObject = -1; // The current object
 int toolObj = -1;    // The object currently being modified
-
-bool pauseScene = false;
 
 
 //----------------------------------------------------------------------------
@@ -365,6 +364,8 @@ static void addObject(int id){
 		sceneObjs[nObjects].moveSpeed = 0.0;
     	sceneObjs[nObjects].moveDistance = 0.0;
     }
+    //  Default line movement;
+    sceneObjs[nObjects].moveType = 0;
 
     toolObj = currObject = nObjects++;
     setToolCallbacks(adjustLocXZ, camRotZ(),
@@ -442,6 +443,7 @@ void init( void ){
     glClearColor( 0.0, 0.0, 0.0, 1.0 ); /* black background */
 }
 
+
 //------------------------------------------------------------------------------
 //	----Part 2D B7----
 //  Animation helper function for Draw Mesh
@@ -461,20 +463,22 @@ void setTimeStamps(float &poseTime, float &moveTime, SceneObject &object){
 	// Find animation time based on elapsed time and speed of mesh, it must
 	// lie between 0 - 6 * the animationDuration
 	// i.e. 6 loops to move forward and back
+	int loopMod = (object.moveType == 0) ? 2 : 1;
 	float animationTime = fmod(elapsedTime * object.moveSpeed, 
-								2 * animationCycles * animationDuration);
+									loopMod * animationCycles * animationDuration);
 	poseTime = fmod(animationTime, animationDuration);
 
 	if(animationTime >= animationCycles * animationDuration){
 		poseTime = animationDuration - poseTime;
 	}
-	moveTime = animationTime / (animationCycles * animationDuration);
 	// Movement time must be less than 1.0
+	moveTime = animationTime / (animationCycles * animationDuration);
 	if(moveTime >= 1.0){
 		moveTime = 2.0 - moveTime;
 	}
 }
 
+	
 
 void drawMesh(SceneObject sceneObj){
     // Load Texture and Mesh if not already present
@@ -484,8 +488,7 @@ void drawMesh(SceneObject sceneObj){
     //  Animation check
     float poseTime = 0.0;
     float moveTime = 0.0;
-    // animated and not paused
-    if(sceneObj.meshId > 55 && !pauseScene){
+    if(sceneObj.meshId > 55){
     	setTimeStamps(poseTime, moveTime, sceneObj);
     }
 
@@ -515,8 +518,18 @@ void drawMesh(SceneObject sceneObj){
 
     //  ----Part 2D B7----
     //  Apply model translation along z-axis for animation (if any) here
-    vec4 displacement = rotations * vec4(0.0, 0.0, 
-    									moveTime * sceneObj.moveDistance, 0.0);
+    vec4 displacement;
+    if(sceneObj.moveType == 0){	// line movement
+    	displacement = rotations * vec4(0.0, 0.0, 
+    		moveTime * sceneObj.moveDistance, 0.0);
+    }
+    else{	// circular movement, clockwise
+    	float radius = sceneObj.moveDistance / 2.0;
+    	displacement = rotations * vec4(-cos(2 * M_PI * moveTime)*radius, 0.0,
+    		-sin(2 * M_PI * moveTime)*radius, 0.0);
+    	// Flip in Y plane after half the circle
+    	rotations *= RotateY(360 * -moveTime);
+    }
     mat4 model = Translate(sceneObj.loc + displacement) * rotations 
     													* Scale(sceneObj.scale);
 
@@ -609,7 +622,7 @@ void display( void ){
         glUniform1f( glGetUniformLocation(shaderProgram, "Shininess"), 
         															so.shine );
         CheckError();
-        drawMesh(sceneObjs[i]);
+       	drawMesh(sceneObjs[i]);
     }
     glutSwapBuffers();
 }
@@ -792,12 +805,6 @@ static void mainmenu(int id){
     	setToolCallbacks(adjustMoveSpeedDistance, mat2(24.0, 0, 0, 5.0),
     						adjustMoveSpeedDistance, mat2(24.0, 0, 0, 5.0));
     }
-    if(id == 87){	//	 ----Part 2D B7----
-    	pauseScene = true;
-    }
-    if(id == 88){	//	 ----Part 2D B7----
-    	pauseScene = false;
-    }
     if(id == 89 && currObject >= 0){    // ----Part J----
         duplicateObject(currObject);
     }
@@ -805,6 +812,16 @@ static void mainmenu(int id){
         deleteObject(currObject);
     }
     if (id == 99) exit(EXIT_SUCCESS);
+}
+
+static void moveMenu(int id){
+	deactivateTool();
+	if(id == 86 && currObject >= 0){
+		sceneObjs[currObject].moveType = 0;
+	}
+	if(id == 87 && currObject >= 0){
+		sceneObjs[currObject].moveType = 1;
+	}
 }
 
 // ----Part K----
@@ -871,12 +888,15 @@ static void makeMenu()
 
     int loadMenuId = createArrayMenu(numSaves, saveMenuEntries, loadMenu);
 
+    int moveMenuId = glutCreateMenu(moveMenu);
+    glutAddMenuEntry("Move in a line", 86);
+    glutAddMenuEntry("Move in a circle", 87);
+
     int lightMenuId = glutCreateMenu(lightMenu);
     glutAddMenuEntry("Move Light 1",70);
     glutAddMenuEntry("R/G/B/All Light 1",71);
     glutAddMenuEntry("Move Light 2",80);
     glutAddMenuEntry("R/G/B/All Light 2",81);
-
 
     glutCreateMenu(mainmenu);
     glutAddMenuEntry("Rotate/Move Camera",50);
@@ -890,7 +910,7 @@ static void makeMenu()
     glutAddMenuEntry("Duplicate Last Object", 89);   // Part J
     glutAddMenuEntry("Delete Last Object", 90);		// Part J
     glutAddMenuEntry("Move Speed / Distance", 85);	// Part 2D B7
-    glutAddMenuEntry("Pause Scene", 87);	// Part 2D B7
+    glutAddSubMenu("Movement Type", moveMenuId);	// Part 2D B7
     glutAddSubMenu("Save Scene", saveMenuId);     // Part K
     glutAddSubMenu("Load Scene", loadMenuId);     // Part K
     glutAddMenuEntry("EXIT", 99);
